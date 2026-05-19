@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The View — Trivia Edition</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a0a2e; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    /* ─── QUESTION BANK ─────────────────────────────────────────────── */
+    const ALL_QUESTIONS = [
+      {
+        q: "What was Barbara Walters' stated vision when she launched The View on August 11, 1997?",
+        choices: [
+          "A show with women of different generations, backgrounds, and views",
+          "A news program to rival Good Morning America",
+          "A celebrity interview show for daytime audiences",
+          "A political debate show for women",
+        ],
+        answer: 0,
+        fact: "Walters said: 'I've always wanted to do a show with women of different generations, backgrounds, and views.' That mandate has guided the show for nearly three decades.",
+        host: "Barbara Walters",
+        clip: null,
+      },
+      {
+        q: "Who were the five original co-hosts when The View premiered in 1997?",
+        choices: [
+          "Barbara Walters, Star Jones, Joy Behar, Debbie Matenopoulos, Meredith Vieira",
+          "Barbara Walters, Star Jones, Joy Behar, Lisa Ling, Whoopi Goldberg",
+          "Barbara Walters, Joy Behar, Meredith Vieira, Lisa Ling, Sherri Shepherd",
+          "Barbara Walters, Star Jones, Rosie O'Donnell, Joy Behar, Meredith Vieira",
+        ],
+        answer: 0,
+        fact: "The original five were Walters, Jones, Behar, Matenopoulos (age 22, the youngest), and Vieira. Behar is the only original panelist still on the show.",
+        host: "Joy Behar",
+        clip: null,
+      },
+      {
+        q: "In 2010, which sitting U.S. president made history as the first to appear on a daytime talk show by guesting on The View?",
+        choices: ["George W. Bush", "Barack Obama", "Bill Clinton", "Jimmy Carter"],
+        answer: 1,
+        fact: "President Barack Obama appeared on July 29, 2010 — the show's most-watched episode ever, drawing nearly 6.6 million viewers. Barbara Walters was returning that day after heart surgery.",
+        host: "Whoopi Goldberg",
+        clip: {
+          url: "https://www.youtube.com/watch?v=e4rxH0WhK5Y",
+          label: "Obama's Historic View Appearance (2010)",
+        },
+      },
+      {
+        q: "Which two co-hosts famously stormed off the set during a 2010 interview with Fox News host Bill O'Reilly?",
+        choices: [
+          "Barbara Walters and Star Jones",
+          "Rosie O'Donnell and Elisabeth Hasselbeck",
+          "Whoopi Goldberg and Joy Behar",
+          "Sherri Shepherd and Lisa Ling",
+        ],
+        answer: 2,
+        fact: "Whoopi and Joy walked off after O'Reilly said 'Muslims killed us on 9/11.' Behar later said she felt 'propelled out of her seat like a poltergeist.' Barbara Walters was NOT happy.",
+        host: "Joy Behar",
+        clip: {
+          url: "https://www.youtube.com/watch?v=Bp891YJw_VY",
+          label: "Whoopi & Joy Walk Off During O'Reilly Interview",
+        },
+      },
+      {
+        q: "Star Jones shocked her co-hosts by doing what during a live Season 9 taping?",
+        choices: [
+          "Announcing her pregnancy",
+          "Announcing her own firing two days before the official announcement",
+          "Walking off during an interview with a controversial guest",
+          "Revealing she'd gotten secret plastic surgery on air",
+        ],
+        answer: 1,
+        fact: "Behind the scenes, Jones had been told her contract wouldn't be renewed. She announced her exit on air two days early, leaving Walters feeling 'betrayed' and prompting Jones to leave immediately.",
+        host: "Star Jones",
+        clip: {
+          url: "https://www.youtube.com/watch?v=CGgVOQja7Io",
+          label: "Star Jones Announces She's Leaving (Live, 2006)",
+        },
+      },
+      {
+        q: "Rosie O'Donnell's explosive feud with which former co-host came to a head with a shouting match over the Iraq War in May 2007?",
+        choices: ["Star Jones", "Meredith Vieira", "Elisabeth Hasselbeck", "Sherri Shepherd"],
+        answer: 2,
+        fact: "The Rosie vs. Elisabeth showdown became one of The View's most iconic moments — producers even went to a split-screen. Rosie later alleged the whole thing was a producer 'setup.'",
+        host: "Rosie O'Donnell",
+        clip: {
+          url: "https://www.youtube.com/watch?v=xht0HcPryWA",
+          label: "Rosie O'Donnell vs. Elisabeth Hasselbeck (2007)",
+        },
+      },
+      {
+        q: "How many seasons did Elisabeth Hasselbeck serve as a co-host on The View?",
+        choices: ["5 seasons", "7 seasons", "10 seasons", "12 seasons"],
+        answer: 2,
+        fact: "Hasselbeck co-hosted for 10 seasons (2003–2013), making her one of the longest-serving panelists. She was originally brought on as Lisa Ling's replacement.",
+        host: "Elisabeth Hasselbeck",
+        clip: null,
+      },
+      {
+        q: "Which co-host replaced Meredith Vieira when she left The View to host Who Wants to Be a Millionaire?",
+        choices: ["Sherri Shepherd", "Rosie O'Donnell", "Lisa Ling", "Star Jones"],
+        answer: 1,
+        fact: "Rosie O'Donnell joined for Season 10 (2006–2007) after Vieira departed, bringing explosive ratings — and explosive drama.",
+        host: "Rosie O'Donnell",
+        clip: null,
+      },
+      {
+        q: "Whoopi Goldberg joined The View in what year, and holds what record as of 2024?",
+        choices: [
+          "2005 — most Daytime Emmy nominations",
+          "2007 — most consecutive seasons as a co-host",
+          "2009 — longest uninterrupted run as moderator",
+          "2006 — first Oscar winner to host",
+        ],
+        answer: 1,
+        fact: "Whoopi joined in 2007 after Rosie's departure. In Season 28 she surpassed Barbara Walters' record of 17 seasons, making her the longest-serving co-host in the show's history.",
+        host: "Whoopi Goldberg",
+        clip: null,
+      },
+      {
+        q: "What is the name of The View's signature opening segment that has been a cornerstone of the show since day one?",
+        choices: ["Morning Mix", "Hot Topics", "The Roundtable", "First Look"],
+        answer: 1,
+        fact: "'Hot Topics' opens every episode — five issues of the moment, discussed by the panel. It's the segment that puts the 'view' in The View and has sparked countless viral moments.",
+        host: "Barbara Walters",
+        clip: null,
+      },
+      {
+        q: "How many total Daytime Emmy Awards had The View won as of 2017?",
+        choices: ["12", "20", "30", "38"],
+        answer: 2,
+        fact: "The View had won 30 Daytime Emmys by 2017, including Outstanding Talk Show and wins for individual hosts including Walters, Behar, Goldberg, Hasselbeck, and Shepherd.",
+        host: "Whoopi Goldberg",
+        clip: null,
+      },
+      {
+        q: "Which original co-host was the youngest panelist at age 22 when The View premiered, and was eventually not renewed after two seasons?",
+        choices: ["Star Jones", "Lisa Ling", "Debbie Matenopoulos", "Meredith Vieira"],
+        answer: 2,
+        fact: "Debbie Matenopoulos, 22 years old, was the youth voice on the panel. SNL parodied her as dim-witted, but she called the experience a launchpad — and has returned as a guest host multiple times.",
+        host: "Debbie Matenopoulos",
+        clip: null,
+      },
+      {
+        q: "Star Jones famously refused to publicly acknowledge what significant personal event during her tenure, despite it being obvious to viewers?",
+        choices: [
+          "Her weight loss surgery",
+          "Her divorce",
+          "A DUI arrest",
+          "Her departure negotiations",
+        ],
+        answer: 0,
+        fact: "Jones lost over 100 lbs and insisted it was diet and exercise — she didn't acknowledge her gastric bypass until years after leaving. Her elaborate sponsored wedding was also a controversy.",
+        host: "Star Jones",
+        clip: null,
+      },
+      {
+        q: "What record did The View reach in July 2024?",
+        choices: ["5,000th episode", "6,000th episode", "7,000th episode", "25 million YouTube views"],
+        answer: 1,
+        fact: "The View aired its 6,000th episode in July 2024 — a remarkable milestone for a show that many early critics didn't expect to last a full season.",
+        host: "Whoopi Goldberg",
+        clip: null,
+      },
+      {
+        q: "What was the name of the two TV programs that Barbara Walters cited as the most direct influences on The View's format?",
+        choices: [
+          "The Today Show and Good Morning America",
+          "This Week with David Brinkley and Girl Talk",
+          "The Tonight Show and The Phil Donahue Show",
+          "60 Minutes and The Merv Griffin Show",
+        ],
+        answer: 1,
+        fact: "'This Week with David Brinkley' and 'Girl Talk' (hosted by Virginia Graham) were Walters' blueprints — both featured unstructured conversation about the news among a group of voices.",
+        host: "Barbara Walters",
+        clip: null,
+      },
+      {
+        q: "Lisa Ling, who replaced Debbie Matenopoulos in Season 3, went on to host which long-running CNN series after leaving The View?",
+        choices: [
+          "CNN's Anderson Cooper 360",
+          "This Is Life with Lisa Ling",
+          "Our Planet",
+          "Finding Your Roots",
+        ],
+        answer: 1,
+        fact: "Ling co-hosted The View from 1999 to 2002, then built a celebrated documentary career, most famously with 'This Is Life with Lisa Ling' on CNN (2014–2022).",
+        host: "Lisa Ling",
+        clip: null,
+      },
+      {
+        q: "In what season and year did The View air its first remote broadcast from Walt Disney World?",
+        choices: ["Season 15, 2012", "Season 19, 2015", "Season 20, 2017", "Season 22, 2019"],
+        answer: 2,
+        fact: "Season 20, 2017 — five episodes were filmed in front of the Tree of Life at Disney's Animal Kingdom. Disney owns ABC, so the cross-promotion was inevitable!",
+        host: "Whoopi Goldberg",
+        clip: null,
+      },
+      {
+        q: "Candace Cameron Bure and which other co-host clashed on air over a bakery's right to refuse a same-sex wedding cake?",
+        choices: ["Sunny Hostin", "Whoopi Goldberg", "Raven-Symoné", "Sara Haines"],
+        answer: 2,
+        fact: "Raven-Symoné and Candace Cameron Bure's debate on religious freedom vs. LGBTQ rights became a viral flashpoint — Raven famously said 'I refuse to associate with you right now.'",
+        host: "Raven-Symoné",
+        clip: {
+          url: "https://www.youtube.com/watch?v=-IYf6sgRRdE",
+          label: "Most Awkward Moments on The View (incl. Raven vs. Candace)",
+        },
+      },
+      {
+        q: "What milestone did The View celebrate on March 27, 2015, with the return of Barbara Walters and Joy Behar?",
+        choices: [
+          "The show's 18th anniversary",
+          "Its 4,000th broadcast",
+          "The 10th anniversary of Hot Topics",
+          "Its 3,500th episode",
+        ],
+        answer: 1,
+        fact: "The 4,000th broadcast on March 27, 2015 brought back Barbara Walters and Joy Behar for a special celebration — a landmark for any TV series.",
+        host: "Barbara Walters",
+        clip: null,
+      },
+      {
+        q: "In September 2024, The View relocated to a brand-new studio. Where?",
+        choices: [
+          "Rockefeller Center, Studio 6B",
+          "ABC Broadcast Center, new wing",
+          "Disney's 7 Hudson Square headquarters, Studio B",
+          "Times Square Studios",
+        ],
+        answer: 2,
+        fact: "For Season 28, The View moved to Studio B at Disney's new 7 Hudson Square HQ — featuring extensive video wall technology for dynamic set redressing. The iconic desk came with them.",
+        host: "Whoopi Goldberg",
+        clip: null,
+      },
+    ];
+
+    /* ─── HELPERS ────────────────────────────────────────────────────── */
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    const HOST_COLORS = {
+      "Barbara Walters":      { bg: "#4A1258", accent: "#C9A227", emoji: "👑" },
+      "Joy Behar":            { bg: "#8B1A1A", accent: "#F4A261", emoji: "😤" },
+      "Whoopi Goldberg":      { bg: "#1A3A5C", accent: "#48CAE4", emoji: "🎭" },
+      "Star Jones":           { bg: "#1B4332", accent: "#95D5B2", emoji: "⚖️" },
+      "Rosie O'Donnell":      { bg: "#6B2D8B", accent: "#FF6EC7", emoji: "💜" },
+      "Elisabeth Hasselbeck": { bg: "#7C3D12", accent: "#FCD34D", emoji: "🔴" },
+      "Lisa Ling":            { bg: "#0F3460", accent: "#E94560", emoji: "🌏" },
+      "Debbie Matenopoulos":  { bg: "#BE185D", accent: "#FDE68A", emoji: "✨" },
+      "Raven-Symoné":         { bg: "#312E81", accent: "#A5F3FC", emoji: "🌈" },
+      "Meredith Vieira":      { bg: "#1E3A5F", accent: "#F9A8D4", emoji: "📰" },
+    };
+
+    const REACTION_CORRECT = [
+      "YES! Barbara would be proud! 👏",
+      "THAT'S A HOT TAKE — a correct one! 🔥",
+      "Joy is applauding from her chair! 👏",
+      "Whoopi is pointing at you RIGHT NOW. ✨",
+      "Exactly right! Now let's go to commercial! 📺",
+      "CORRECT! Star Jones approves, even if she won't admit it. 💅",
+    ];
+    const REACTION_WRONG = [
+      "Oh honey... Barbara would NOT have said that.",
+      "Joy is giving you the look. THE look. 😑",
+      "Whoopi just put her hands up... 🙌",
+      "WRONG! Star Jones has left the building.",
+      "Elisabeth respectfully disagrees — and so does the answer key.",
+      "That's a Hot Topic for another day. ❌",
+    ];
+
+    /* ─── SUB-COMPONENTS ─────────────────────────────────────────────── */
+    function MicIcon({ style }) {
+      return (
+        <svg style={style} viewBox="0 0 24 24" fill="none">
+          <rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor" opacity="0.9"/>
+          <path d="M5 10a7 7 0 0 0 14 0" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
+          <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <line x1="9" y1="22" x2="15" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      );
+    }
+
+    function StarBurst({ style }) {
+      return (
+        <svg style={style} viewBox="0 0 60 60">
+          {[0,30,60,90,120,150,180,210,240,270,300,330].map((deg, i) => (
+            <line key={i} x1="30" y1="30"
+              x2={30 + 28 * Math.cos((deg * Math.PI) / 180)}
+              y2={30 + 28 * Math.sin((deg * Math.PI) / 180)}
+              stroke="currentColor"
+              strokeWidth={i % 2 === 0 ? 3 : 1.5}
+              opacity={i % 2 === 0 ? 0.9 : 0.4}
+            />
+          ))}
+          <circle cx="30" cy="30" r="6" fill="currentColor"/>
+        </svg>
+      );
+    }
+
+    function ProgressBar({ current, total, score }) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18, padding:"0 4px" }}>
+          <div style={{ flex:1, height:8, background:"rgba(255,255,255,0.12)", borderRadius:8, overflow:"hidden" }}>
+            <div style={{
+              width:`${(current/total)*100}%`, height:"100%",
+              background:"linear-gradient(90deg, #C9A227, #FFD700)",
+              borderRadius:8, transition:"width 0.5s ease",
+              boxShadow:"0 0 8px rgba(201,162,39,0.5)",
+            }}/>
+          </div>
+          <div style={{ fontSize:"0.72rem", fontWeight:800, color:"rgba(255,255,255,0.7)", letterSpacing:1, minWidth:80, textAlign:"right", fontFamily:"Georgia, serif" }}>
+            Q {current}/{total} · {score}pts
+          </div>
+        </div>
+      );
+    }
+
+    function HostBadge({ host, style }) {
+      const cfg = HOST_COLORS[host] || { accent:"#C9A227", emoji:"🎙️" };
+      return (
+        <div style={{
+          display:"inline-flex", alignItems:"center", gap:6,
+          background:"rgba(255,255,255,0.1)", border:`1.5px solid ${cfg.accent}55`,
+          borderRadius:20, padding:"4px 12px", fontSize:"0.68rem", fontWeight:800,
+          color:cfg.accent, letterSpacing:0.5, fontFamily:"Georgia, serif", ...style,
+        }}>
+          <span>{cfg.emoji}</span>
+          <span style={{textTransform:"uppercase"}}>{host}</span>
+        </div>
+      );
+    }
+
+    /* ─── MAIN APP ───────────────────────────────────────────────────── */
+    function App() {
+      const [screen, setScreen]     = useState("title");
+      const [questions, setQuestions] = useState([]);
+      const [qIndex, setQIndex]     = useState(0);
+      const [selected, setSelected] = useState(null);
+      const [score, setScore]       = useState(0);
+      const [history, setHistory]   = useState([]);
+      const [shake, setShake]       = useState(false);
+      const [reaction, setReaction] = useState("");
+      const [showFact, setShowFact] = useState(false);
+      const [animKey, setAnimKey]   = useState(0);
+      const [titleAnim, setTitleAnim] = useState(false);
+
+      const QUESTIONS_PER_GAME = 12;
+
+      useEffect(() => { setTimeout(() => setTitleAnim(true), 100); }, []);
+
+      function startGame() {
+        setQuestions(shuffle(ALL_QUESTIONS).slice(0, QUESTIONS_PER_GAME));
+        setQIndex(0); setSelected(null); setScore(0);
+        setHistory([]); setReaction(""); setShowFact(false);
+        setAnimKey(k => k + 1); setScreen("game");
+      }
+
+      function handleAnswer(idx) {
+        if (selected !== null) return;
+        setSelected(idx);
+        const q = questions[qIndex];
+        const correct = idx === q.answer;
+        if (correct) { setScore(s => s + 1); setReaction(shuffle(REACTION_CORRECT)[0]); }
+        else {
+          setReaction(shuffle(REACTION_WRONG)[0]);
+          setShake(true); setTimeout(() => setShake(false), 600);
+        }
+        setShowFact(true);
+        setHistory(h => [...h, { correct, q: q.q, chosen: q.choices[idx], right: q.choices[q.answer] }]);
+      }
+
+      function nextQuestion() {
+        if (qIndex + 1 >= questions.length) { setScreen("result"); }
+        else {
+          setQIndex(i => i + 1); setSelected(null);
+          setReaction(""); setShowFact(false); setAnimKey(k => k + 1);
+        }
+      }
+
+      const current = questions[qIndex];
+      const hostCfg = current ? (HOST_COLORS[current.host] || { bg:"#4A1258", accent:"#C9A227" }) : {};
+
+      /* ── RESULT ── */
+      if (screen === "result") {
+        const pct = Math.round((score / QUESTIONS_PER_GAME) * 100);
+        const verdict =
+          score >= 11 ? { label:"EXECUTIVE PRODUCER", sub:"Barbara Walters is offering you her chair.", icon:"👑" }
+          : score >= 9 ? { label:"SENIOR CO-HOST", sub:"You've earned a Hot Topics seat.", icon:"🎙️" }
+          : score >= 7 ? { label:"GUEST PANELIST", sub:"Strong showing. Come back Tuesday.", icon:"📺" }
+          : score >= 5 ? { label:"STUDIO AUDIENCE", sub:"You know your View, but there's more to learn.", icon:"👏" }
+          : { label:"WAITING IN STANDBY", sub:"Revisit those Hot Topics, honey.", icon:"😬" };
+
+        return (
+          <div style={{ minHeight:"100vh", background:"linear-gradient(160deg, #1a0a2e 0%, #2d0a4e 40%, #0f1a3d 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"20px 16px", fontFamily:"Georgia, serif", position:"relative", overflow:"hidden" }}>
+            {[...Array(18)].map((_,i) => (
+              <div key={i} style={{ position:"absolute", left:`${(i*37+11)%100}%`, top:`${(i*53+7)%100}%`, width:i%3===0?3:2, height:i%3===0?3:2, borderRadius:"50%", background:"rgba(255,255,255,0.5)" }}/>
+            ))}
+            <div style={{ background:"rgba(255,255,255,0.06)", border:"2px solid rgba(201,162,39,0.4)", borderRadius:24, padding:"40px 32px", maxWidth:460, width:"100%", textAlign:"center", backdropFilter:"blur(12px)", boxShadow:"0 0 60px rgba(201,162,39,0.15)" }}>
+              <div style={{ fontSize:"3.5rem", marginBottom:8 }}>{verdict.icon}</div>
+              <div style={{ fontSize:"0.7rem", letterSpacing:4, textTransform:"uppercase", color:"#C9A227", fontWeight:800, marginBottom:6 }}>YOUR TITLE IS</div>
+              <div style={{ fontSize:"1.7rem", fontWeight:900, color:"#fff", marginBottom:8, lineHeight:1.2, fontStyle:"italic" }}>{verdict.label}</div>
+              <div style={{ fontSize:"0.85rem", color:"rgba(255,255,255,0.7)", marginBottom:24, fontStyle:"italic" }}>{verdict.sub}</div>
+              <div style={{ background:"rgba(201,162,39,0.15)", border:"1px solid rgba(201,162,39,0.3)", borderRadius:16, padding:"20px", marginBottom:24 }}>
+                <div style={{ fontSize:"3rem", fontWeight:900, color:"#FFD700", lineHeight:1 }}>{score}/{QUESTIONS_PER_GAME}</div>
+                <div style={{ fontSize:"1rem", color:"rgba(255,255,255,0.5)", marginTop:4 }}>{pct}% correct</div>
+              </div>
+              <div style={{ marginBottom:24, textAlign:"left" }}>
+                {history.map((h,i) => (
+                  <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:8, fontSize:"0.72rem", color: h.correct ? "rgba(150,255,150,0.85)" : "rgba(255,120,120,0.85)" }}>
+                    <span style={{ flexShrink:0, marginTop:1 }}>{h.correct ? "✅" : "❌"}</span>
+                    <span style={{ lineHeight:1.4 }}>{h.q.length > 65 ? h.q.slice(0,65)+"…" : h.q}</span>
+                  </div>
+                ))}
+              </div>
+              <button onClick={startGame} style={{ background:"linear-gradient(135deg, #C9A227, #FFD700)", border:"none", borderRadius:50, padding:"14px 40px", fontSize:"1rem", fontWeight:900, cursor:"pointer", color:"#1a0a2e", letterSpacing:1, fontFamily:"Georgia, serif", boxShadow:"0 4px 20px rgba(201,162,39,0.4)", textTransform:"uppercase" }}>
+                🎙️ New Hot Topics
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      /* ── GAME ── */
+      if (screen === "game" && current) {
+        return (
+          <div key={animKey} style={{ minHeight:"100vh", background:`linear-gradient(160deg, ${hostCfg.bg}ee 0%, #0d0d1a 60%, #1a0a2e 100%)`, display:"flex", flexDirection:"column", alignItems:"center", padding:"20px 16px 32px", fontFamily:"Georgia, serif", transition:"background 0.6s ease", animation:"fadeIn 0.4s ease", position:"relative", overflow:"hidden" }}>
+            <style>{`
+              @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+              @keyframes shakeIt { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(4px)} }
+              @keyframes popIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+              @keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+            `}</style>
+
+            <StarBurst style={{ position:"absolute", top:-20, right:-20, width:120, height:120, color:hostCfg.accent, opacity:0.12 }}/>
+            <StarBurst style={{ position:"absolute", bottom:40, left:-30, width:90, height:90, color:"#C9A227", opacity:0.1 }}/>
+
+            <div style={{ width:"100%", maxWidth:520, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <div style={{ fontSize:"0.65rem", fontWeight:800, letterSpacing:3, color:"rgba(255,255,255,0.4)", textTransform:"uppercase" }}>THE VIEW</div>
+              <MicIcon style={{ width:20, height:20, color:hostCfg.accent, opacity:0.7 }}/>
+              <div style={{ fontSize:"0.65rem", fontWeight:800, letterSpacing:2, color:"rgba(255,255,255,0.4)", textTransform:"uppercase" }}>HOT TOPICS</div>
+            </div>
+
+            <div style={{ width:"100%", maxWidth:520 }}>
+              <ProgressBar current={qIndex+1} total={QUESTIONS_PER_GAME} score={score} />
+            </div>
+
+            <div style={{ width:"100%", maxWidth:520, background:"rgba(255,255,255,0.07)", border:`2px solid ${hostCfg.accent}44`, borderRadius:20, padding:"28px 24px", marginBottom:18, backdropFilter:"blur(10px)", boxShadow:`0 0 40px ${hostCfg.accent}22`, animation: shake ? "shakeIt 0.5s ease" : "popIn 0.4s ease" }}>
+              <HostBadge host={current.host} style={{ marginBottom:14 }} />
+              <p style={{ fontSize:"1.05rem", fontWeight:700, lineHeight:1.55, color:"#fff", margin:0, fontStyle:"italic" }}>{current.q}</p>
+            </div>
+
+            <div style={{ width:"100%", maxWidth:520, display:"flex", flexDirection:"column", gap:10 }}>
+              {current.choices.map((choice, i) => {
+                const isSelected = selected === i;
+                const isCorrect  = i === current.answer;
+                const revealed   = selected !== null;
+                let bg = "rgba(255,255,255,0.07)";
+                let border = "1.5px solid rgba(255,255,255,0.15)";
+                let color = "#fff";
+                let icon = null;
+                if (revealed) {
+                  if (isCorrect) { bg="rgba(50,200,100,0.2)"; border="2px solid rgba(50,200,100,0.7)"; color="#7dffb0"; icon="✅"; }
+                  else if (isSelected) { bg="rgba(220,50,50,0.2)"; border="2px solid rgba(220,50,50,0.6)"; color="#ff9090"; icon="❌"; }
+                  else { bg="rgba(255,255,255,0.03)"; color="rgba(255,255,255,0.35)"; }
+                }
+                return (
+                  <button key={i} onClick={() => handleAnswer(i)} disabled={selected !== null}
+                    style={{ background:bg, border, borderRadius:14, padding:"14px 18px", textAlign:"left", cursor:selected!==null?"default":"pointer", color, fontFamily:"Georgia, serif", fontSize:"0.88rem", fontWeight:600, lineHeight:1.4, display:"flex", alignItems:"center", gap:10, transition:"all 0.3s ease", transform: isCorrect&&revealed?"scale(1.02)":"scale(1)" }}>
+                    <span style={{ width:28, height:28, borderRadius:"50%", background: revealed&&isCorrect?"rgba(50,200,100,0.3)":"rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"0.75rem", fontWeight:900, flexShrink:0, color: revealed&&isCorrect?"#7dffb0":"rgba(255,255,255,0.5)" }}>
+                      {icon || String.fromCharCode(65+i)}
+                    </span>
+                    {choice}
+                  </button>
+                );
+              })}
+            </div>
+
+            {showFact && (
+              <div style={{ width:"100%", maxWidth:520, marginTop:16, animation:"slideUp 0.4s ease" }}>
+                <div style={{ background:"rgba(255,255,255,0.08)", border:`1.5px solid ${hostCfg.accent}55`, borderRadius:16, padding:"16px 20px", marginBottom:12 }}>
+                  <div style={{ fontSize:"0.88rem", fontWeight:800, color:hostCfg.accent, marginBottom:8, fontStyle:"italic" }}>{reaction}</div>
+                  <div style={{ fontSize:"0.8rem", color:"rgba(255,255,255,0.75)", lineHeight:1.55, fontStyle:"italic" }}>📋 {current.fact}</div>
+
+                  {current.clip && (
+                    <a href={current.clip.url} target="_blank" rel="noopener noreferrer"
+                      style={{ display:"flex", alignItems:"center", gap:8, marginTop:14, padding:"9px 14px", background:"rgba(255,0,0,0.18)", border:"1.5px solid rgba(255,80,80,0.45)", borderRadius:10, textDecoration:"none", color:"#ff9090", fontSize:"0.76rem", fontWeight:800, fontFamily:"Georgia, serif" }}
+                      onMouseOver={e => e.currentTarget.style.background="rgba(255,0,0,0.28)"}
+                      onMouseOut={e => e.currentTarget.style.background="rgba(255,0,0,0.18)"}>
+                      <span style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:6, background:"rgba(255,0,0,0.75)", flexShrink:0 }}>
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                      </span>
+                      <span style={{ lineHeight:1.3 }}>Watch the clip: <span style={{ color:"#fff", fontStyle:"italic" }}>{current.clip.label}</span></span>
+                      <span style={{ marginLeft:"auto", opacity:0.6, flexShrink:0 }}>↗</span>
+                    </a>
+                  )}
+                </div>
+                <button onClick={nextQuestion} style={{ width:"100%", background:`linear-gradient(135deg, ${hostCfg.accent}, ${hostCfg.accent}bb)`, border:"none", borderRadius:50, padding:"14px", fontSize:"0.9rem", fontWeight:900, cursor:"pointer", color:hostCfg.bg, letterSpacing:1, fontFamily:"Georgia, serif", textTransform:"uppercase", boxShadow:`0 4px 20px ${hostCfg.accent}55` }}>
+                  {qIndex+1 >= QUESTIONS_PER_GAME ? "🎙️ See My Title" : "Next Hot Topic →"}
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      /* ── TITLE ── */
+      return (
+        <div style={{ minHeight:"100vh", background:"linear-gradient(160deg, #1a0a2e 0%, #2d0a4e 40%, #0f1a3d 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"24px 20px", fontFamily:"Georgia, serif", position:"relative", overflow:"hidden" }}>
+          <style>{`
+            @keyframes drift { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-8px) rotate(3deg)} }
+            @keyframes glow  { 0%,100%{opacity:0.6} 50%{opacity:1} }
+            @keyframes titleIn { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
+          `}</style>
+
+          <StarBurst style={{ position:"absolute", top:30, left:20, width:70, height:70, color:"#C9A227", opacity:0.25, animation:"drift 4s ease-in-out infinite" }}/>
+          <StarBurst style={{ position:"absolute", bottom:60, right:20, width:50, height:50, color:"#FF6EC7", opacity:0.2, animation:"drift 5s ease-in-out infinite 1s" }}/>
+          <StarBurst style={{ position:"absolute", top:"45%", right:10, width:40, height:40, color:"#48CAE4", opacity:0.2, animation:"drift 6s ease-in-out infinite 2s" }}/>
+
+          {[...Array(20)].map((_,i) => (
+            <div key={i} style={{ position:"absolute", left:`${(i*41+5)%100}%`, top:`${(i*57+3)%100}%`, width:2, height:2, borderRadius:"50%", background:"rgba(255,255,255,0.35)", animation:`glow ${2+(i%3)}s ease-in-out infinite ${(i*0.3)%2}s` }}/>
+          ))}
+
+          {titleAnim && (
+            <div style={{ textAlign:"center", maxWidth:460, width:"100%", animation:"titleIn 0.7s ease forwards" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:14, marginBottom:20 }}>
+                <MicIcon style={{ width:28, height:28, color:"#C9A227", opacity:0.85 }}/>
+                <div style={{ height:1, flex:1, maxWidth:60, background:"linear-gradient(90deg, transparent, #C9A22766)" }}/>
+                <div style={{ fontSize:"0.62rem", letterSpacing:5, fontWeight:800, color:"#C9A227", textTransform:"uppercase" }}>ABC DAYTIME</div>
+                <div style={{ height:1, flex:1, maxWidth:60, background:"linear-gradient(90deg, #C9A22766, transparent)" }}/>
+                <MicIcon style={{ width:28, height:28, color:"#C9A227", opacity:0.85 }}/>
+              </div>
+
+              <div style={{ fontSize:"4rem", fontWeight:900, color:"#fff", lineHeight:1, letterSpacing:-1, textShadow:"0 0 40px rgba(201,162,39,0.4)", marginBottom:4 }}>THE VIEW</div>
+              <div style={{ fontSize:"0.95rem", letterSpacing:6, fontWeight:700, color:"#C9A227", textTransform:"uppercase", marginBottom:6 }}>TRIVIA EDITION</div>
+              <div style={{ width:80, height:3, margin:"0 auto 24px", background:"linear-gradient(90deg, #C9A227, #FFD700)", borderRadius:3 }}/>
+
+              <p style={{ color:"rgba(255,255,255,0.7)", fontSize:"0.92rem", lineHeight:1.65, marginBottom:24, fontStyle:"italic" }}>
+                Hot Topics. Walk-offs. Presidential visits.<br/>
+                Feuds that shook daytime television.<br/>
+                <strong style={{ color:"#fff", fontStyle:"normal" }}>How well do you know The View?</strong>
+              </p>
+
+              <div style={{ display:"flex", justifyContent:"center", flexWrap:"wrap", gap:8, marginBottom:28 }}>
+                {["👑 Barbara","😤 Joy","🎭 Whoopi","⚖️ Star","💜 Rosie","🔴 Elisabeth"].map(h => (
+                  <div key={h} style={{ background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", borderRadius:20, padding:"5px 12px", fontSize:"0.7rem", fontWeight:700, color:"rgba(255,255,255,0.7)" }}>{h}</div>
+                ))}
+              </div>
+
+              <div style={{ background:"rgba(201,162,39,0.1)", border:"1px solid rgba(201,162,39,0.3)", borderRadius:12, padding:"12px 20px", marginBottom:28, fontSize:"0.78rem", color:"rgba(255,255,255,0.65)", lineHeight:1.75 }}>
+                📺 <strong style={{ color:"#C9A227" }}>20 questions</strong> · 12 per game · Spanning all 29 seasons (1997–2025)<br/>
+                <span style={{ color:"rgba(255,100,100,0.85)" }}>▶</span>{" "}
+                <strong style={{ color:"rgba(255,140,140,0.9)" }}>4 questions</strong> unlock a real YouTube clip from the show
+              </div>
+
+              <button onClick={startGame}
+                style={{ background:"linear-gradient(135deg, #C9A227, #FFD700)", border:"none", borderRadius:50, padding:"16px 48px", fontSize:"1.05rem", fontWeight:900, cursor:"pointer", color:"#1a0a2e", letterSpacing:2, fontFamily:"Georgia, serif", textTransform:"uppercase", boxShadow:"0 6px 30px rgba(201,162,39,0.45)", transition:"transform 0.15s ease, box-shadow 0.15s ease" }}
+                onMouseOver={e => { e.target.style.transform="scale(1.04)"; e.target.style.boxShadow="0 8px 40px rgba(201,162,39,0.6)"; }}
+                onMouseOut={e  => { e.target.style.transform="scale(1)";    e.target.style.boxShadow="0 6px 30px rgba(201,162,39,0.45)"; }}>
+                🎙️ Take a Seat at the Table
+              </button>
+
+              <div style={{ marginTop:20, fontSize:"0.68rem", color:"rgba(255,255,255,0.3)" }}>
+                No co-hosts were harmed in the making of this game.
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
